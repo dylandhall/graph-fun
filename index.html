@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en" data-boot="loading">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0f1117" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="Graph Fun: hit every dot with the graph of a function, using the shortest line.">
+  <title>Graph Fun</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%234f6bff'/%3E%3Cpath d='M10 18 Q32 66 54 18' fill='none' stroke='white' stroke-width='5' stroke-linecap='round'/%3E%3Ccircle cx='18.8' cy='33.4' r='5.5' fill='%23fbbf24'/%3E%3Ccircle cx='32' cy='42' r='5.5' fill='%23fbbf24'/%3E%3Ccircle cx='45.2' cy='33.4' r='5.5' fill='%23fbbf24'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script defer src="node_modules/@cortex-js/compute-engine/dist/umd-min/compute-engine.cjs"></script>
+  <script defer src="node_modules/mathlive/mathlive.min.js"></script>
+  <script defer src="js/curve.js"></script>
+  <script defer src="js/scoring.js"></script>
+  <script defer src="js/formula.js"></script>
+  <script defer src="js/sliders.js"></script>
+  <script defer src="js/challenges.js"></script>
+  <script defer src="js/levels.js"></script>
+  <script defer src="js/engine.js"></script>
+  <script defer src="js/storage.js"></script>
+  <script defer src="js/render.js"></script>
+  <script defer src="js/keyboard.js"></script>
+  <script defer src="js/app.js"></script>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="i-logo" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="15" fill="#4f6bff"/>
+      <path d="M10 18 Q32 66 54 18" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="18.8" cy="33.4" r="5.5" fill="#fbbf24"/>
+      <circle cx="32" cy="42" r="5.5" fill="#fbbf24"/>
+      <circle cx="45.2" cy="33.4" r="5.5" fill="#fbbf24"/>
+    </symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2.2"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-squiggle" viewBox="0 0 24 24"><path d="M3 15c2.5-7 4.5-7 6 0s3.5 7 6 0 4.5-7 6 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8V4.5M9 13.2v.6M15 13.2v.6M9.5 17h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="3.6" r="1.4" fill="currentColor"/></symbol>
+  </svg>
+
+  <main id="app">
+    <!-- Shown until app.js boots (or forever if scripts are blocked). -->
+    <div id="boot-msg" class="boot-msg" role="status">
+      <svg class="logo spin" aria-hidden="true"><use href="#i-logo"/></svg>
+      <p>Loading Graph Fun…</p>
+      <noscript><p>Graph Fun needs JavaScript.</p></noscript>
+    </div>
+
+    <section id="fatal" class="screen fatal" hidden aria-labelledby="fatal-title">
+      <div class="panel fatal-panel">
+        <svg class="logo" aria-hidden="true"><use href="#i-logo"/></svg>
+        <h1 id="fatal-title">Graph Fun couldn't start</h1>
+        <div id="fatal-body"></div>
+      </div>
+    </section>
+
+    <!-- ===== Level select ===== -->
+    <section id="screen-levels" class="screen screen-levels" hidden aria-labelledby="levels-title">
+      <header class="hero">
+        <svg class="logo" aria-hidden="true"><use href="#i-logo"/></svg>
+        <div>
+          <h1 id="levels-title">Graph Fun</h1>
+          <p class="tagline">Hit every dot with the shortest line.</p>
+        </div>
+      </header>
+      <p id="progress-summary" class="progress-summary"></p>
+      <div id="rules-notice" class="rules-notice" role="status" hidden>
+        <p>Scoring got gentler on long lines and big formulas, so your saved bests were re-scored. Lesson stars never drop, but the challenge bots retrained, so some challenge stars may have changed.</p>
+        <button type="button" id="rules-notice-close" class="btn btn-soft">Got it</button>
+      </div>
+      <section class="levels-section" aria-labelledby="lessons-title">
+        <h2 id="lessons-title" class="section-title">Levels</h2>
+        <div id="level-grid" class="level-grid"></div>
+      </section>
+      <section class="levels-section freeplay" aria-labelledby="freeplay-title">
+        <div class="section-head">
+          <h2 id="freeplay-title" class="section-title">Free play</h2>
+          <p id="freeplay-intro" class="section-intro">Random-dot challenges with no single right answer. Hit as many dots as you can with a short formula and a short line, and try to beat the bot.</p>
+        </div>
+        <div id="challenge-grid" class="level-grid"></div>
+      </section>
+      <footer class="levels-footer">
+        <p class="small muted">Type a function of <i>x</i> whose graph passes through the dots. Every dot earns points; the shorter your line, the more stars.</p>
+        <button type="button" id="reset-progress" class="btn btn-ghost btn-danger">Reset progress</button>
+      </footer>
+    </section>
+
+    <!-- ===== Game ===== -->
+    <section id="screen-game" class="screen screen-game" hidden aria-labelledby="level-title">
+      <header class="topbar">
+        <button type="button" id="back-to-levels" class="btn btn-ghost btn-back">
+          <svg class="icon" aria-hidden="true"><use href="#i-back"/></svg><span>Levels</span>
+        </button>
+        <h1 class="level-heading" id="level-title"><span id="level-num" class="level-num"></span><span id="level-name"></span></h1>
+        <span id="level-best" class="stars level-best"></span>
+      </header>
+
+      <div class="game-layout">
+        <div class="main-col">
+          <div class="plot" id="plot-wrap">
+            <canvas id="plot" role="img" aria-label="Graph"></canvas>
+          </div>
+
+          <div class="stats" id="stats">
+            <div class="stat" id="stat-hits-wrap" title="Dots your graph passes through">
+              <span class="stat-label">Dots</span><span class="stat-value" id="stat-hits">—</span>
+            </div>
+            <div class="stat" id="stat-length-wrap" title="Length of your line in grid units">
+              <span class="stat-label">Length</span><span class="stat-value" id="stat-length">—</span>
+            </div>
+            <div class="stat" id="stat-par-wrap" title="par (reference length): the length of our reference answer">
+              <span class="stat-label">Par</span><span class="stat-value" id="stat-par">—</span>
+            </div>
+            <div class="stat" id="stat-size-wrap" title="Formula size: each number, x, operator and function counts 1" hidden>
+              <span class="stat-label">Size</span><span class="stat-value" id="stat-size">—</span>
+            </div>
+            <div class="stat" id="stat-score-wrap" title="Score if you lock in now">
+              <span class="stat-label">Score</span><span class="stat-value" id="stat-score">—</span>
+            </div>
+            <div class="stat" id="stat-stars-wrap" title="Stars if you lock in now">
+              <span class="stat-label">Stars</span><span class="stat-value stars" id="stat-stars">—</span>
+            </div>
+            <div class="stat" id="stat-bot-wrap" title="The bot’s score on this challenge" hidden>
+              <span class="stat-label">Bot</span><span class="stat-value" id="stat-bot">—</span>
+            </div>
+          </div>
+
+          <div class="formula-bar" id="formula-bar">
+            <label class="y-eq" for="formula-plain" id="y-eq">y =</label>
+            <div id="formula-slot" class="formula-slot"></div>
+            <button type="button" id="lock-in" class="btn btn-primary" disabled>Lock in</button>
+          </div>
+          <p id="status" class="status" aria-live="polite"></p>
+          <p id="wall-warning" class="wall-warning" hidden></p>
+          <p id="vars-tip" class="vars-tip" hidden></p>
+        </div>
+
+        <aside class="side-col" aria-label="Sliders and level info">
+          <section id="vars-panel" class="panel vars-panel" hidden aria-labelledby="vars-title">
+            <div class="vars-head">
+              <h2 id="vars-title" class="vars-title">Sliders</h2>
+              <span id="vars-howto" class="vars-howto">drag, or use ← →</span>
+            </div>
+            <div id="vars-rows" class="vars-rows"></div>
+          </section>
+
+          <section class="panel blurb-panel">
+            <p id="level-prompt" class="prompt" hidden></p>
+            <div id="hints" class="hints" aria-live="polite">
+              <div id="hint-1" class="hint-block" tabindex="-1">
+                <p class="hint-label">Hint 1</p>
+                <p class="family"><span id="level-family" class="chip"></span></p>
+                <div id="level-blurb" class="blurb"></div>
+              </div>
+              <div id="hint-2" class="hint-block" tabindex="-1" hidden>
+                <p class="hint-label">Hint 2</p>
+                <p id="level-hint" class="hint"></p>
+              </div>
+            </div>
+            <div id="hint-wrap">
+              <button type="button" id="hint-btn" class="btn btn-soft" aria-controls="hints">
+                <svg class="icon" aria-hidden="true"><use href="#i-bulb"/></svg><span>Show hint 1 of 2</span>
+              </button>
+            </div>
+            <details id="whynot" class="whynot" hidden>
+              <summary>Why this kind of function?</summary>
+              <p id="level-whynot"></p>
+            </details>
+          </section>
+
+          <section class="panel bot-panel" id="bot-wrap" hidden aria-labelledby="bot-title">
+            <div class="bot-head">
+              <svg class="icon bot-icon" aria-hidden="true"><use href="#i-bot"/></svg>
+              <h2 id="bot-title" class="bot-title">Beat the bot</h2>
+              <span class="bot-target">the bot’s score <b id="bot-score">—</b></span>
+            </div>
+            <p id="bot-thresholds" class="bot-thresholds"></p>
+            <p id="bot-teaser" class="bot-teaser"></p>
+            <p id="bot-lock-note" class="bot-lock-note"></p>
+            <button type="button" id="bot-btn" class="btn btn-soft" aria-expanded="false" aria-controls="bot-answer">
+              <span>Show the bot’s answer (spoiler)</span>
+            </button>
+            <div id="bot-answer" class="bot-answer" hidden></div>
+          </section>
+
+          <details class="panel how" id="how">
+            <summary>How scoring works</summary>
+            <ul>
+              <li><strong>Hit every dot.</strong> Each dot is an equal share of the 1000 points, so one more dot is worth more than a slightly shorter line.</li>
+              <li><strong>Short lines score best.</strong> Up to par the length is free. After that points drop slowly (<span data-g="1.25">×0.97</span> at 125% of par, <span data-g="1.5">×0.92</span> at 150%, <span data-g="2">×0.76</span> at 200%), and lines that wiggle all over the screen score nothing.</li>
+              <li><strong>Stars are for the line.</strong> They need every dot and no red wall crossed: ★★★ within 5% of par, ★★ within 25%, ★ within 41%.</li>
+              <li><strong>Par</strong> is the length of our reference answer. Parts of the graph that leave the screen count their width, and jumps count their height.</li>
+            </ul>
+          </details>
+
+          <details class="panel how" id="how-challenge" hidden>
+            <summary>How scoring works</summary>
+            <ul>
+              <li><strong>Every dot counts.</strong> Score = 1000 × dots hit ÷ dots; you don't need them all.</li>
+              <li><strong>Short formula.</strong> Each number, letter (<i>x</i>, <i>a</i>–<i>d</i>, π, e), operator and function counts 1 (brackets are free). The first 15 symbols are free; a few more cost a little, many more cost a lot.</li>
+              <li><strong>Short line.</strong> Up to the dot-to-dot length it’s free. After that points drop slowly (<span data-g="1.5">×0.92</span> at 1.5×, <span data-g="2">×0.76</span> at 2×, <span data-g="3">×0.37</span> at 3×). Crossing a red wall in view halves the score. ★ 60% of the bot’s score, ★★ 85%, ★★★ match or beat it.</li>
+            </ul>
+          </details>
+
+          <label class="panel option">
+            <input type="checkbox" id="show-coords" checked>
+            <span>Show coordinates</span>
+          </label>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== Result ===== -->
+  <dialog id="result-dialog" class="dialog result" aria-labelledby="result-title">
+    <form method="dialog" class="result-inner">
+      <div id="result-stars" class="result-stars stars"></div>
+      <h2 id="result-title">Perfect!</h2>
+      <p class="result-score"><span id="result-score">0</span><span class="unit">points</span></p>
+      <p id="result-best" class="new-best" hidden>New best!</p>
+      <div id="result-formula" class="result-formula" hidden>
+        <p class="result-formula-line"><span class="bot-y">y =</span><span id="result-formula-math" class="result-formula-math"></span></p>
+        <p id="result-vars" class="result-vars"></p>
+      </div>
+      <dl class="result-facts" id="result-facts"></dl>
+      <div class="split" id="result-split">
+        <div class="split-bar" id="split-bar" aria-hidden="true"></div>
+        <ul class="split-legend" id="split-legend"></ul>
+      </div>
+      <p id="result-note" class="result-note"></p>
+      <p id="result-bot-teaser" class="result-bot-teaser" hidden></p>
+      <details id="result-bot" class="result-bot" hidden>
+        <summary>The bot’s answer</summary>
+        <div id="result-bot-answer" class="bot-answer"></div>
+      </details>
+      <div class="dialog-actions">
+        <button type="button" id="result-levels" class="btn btn-ghost">Levels</button>
+        <button type="button" id="result-retry" class="btn btn-soft">Retry</button>
+        <button type="button" id="result-next" class="btn btn-primary">Next level</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="reset-dialog" class="dialog confirm" aria-labelledby="reset-title">
+    <form method="dialog">
+      <h2 id="reset-title">Reset progress?</h2>
+      <p>This forgets every best score and star, including your challenge bests, and locks the levels again.</p>
+      <div class="dialog-actions">
+        <button value="cancel" class="btn btn-soft" autofocus>Cancel</button>
+        <button value="reset" id="reset-confirm" class="btn btn-danger-solid">Reset</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

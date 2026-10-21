@@ -1,0 +1,17 @@
+{
+  "name": "graph-fun",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "gen:challenges": "node tools/gen-challenges.js",
+    "start": "python3 tools/serve.py"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "dependencies": {
+    "@cortex-js/compute-engine": "0.141.0",
+    "mathlive": "0.111.0"
+  }
+}

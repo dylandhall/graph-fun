@@ -1,0 +1,55 @@
+# Tests the game and publishes it to GitHub Pages on every push to main.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+      # Only the files the page loads. The node_modules paths stay the same so
+      # MathLive finds its fonts, but the Compute Engine is published as .js:
+      # Pages doesn't serve .cjs as JavaScript, which Safari needs.
+      - name: Assemble site
+        run: |
+          ce=node_modules/@cortex-js/compute-engine/dist/umd-min
+          mkdir -p _site/node_modules/mathlive "_site/$ce"
+          cp -r index.html css js _site/
+          cp -r node_modules/mathlive/mathlive.min.js node_modules/mathlive/fonts node_modules/mathlive/LICENSE.txt _site/node_modules/mathlive/
+          cp "$ce/compute-engine.cjs" "_site/$ce/compute-engine.js"
+          cp node_modules/@cortex-js/compute-engine/LICENSE* _site/node_modules/@cortex-js/compute-engine/
+          sed -i "s#$ce/compute-engine.cjs#$ce/compute-engine.js#" _site/index.html
+          grep -q "$ce/compute-engine.js" _site/index.html
+
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
